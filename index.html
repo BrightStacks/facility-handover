@@ -1351,10 +1351,13 @@
       color: #ffd38a;
     }
     .top-shell.setup-only-hidden {
+      display: none !important;
       opacity: 0 !important;
       transform: translateY(-24px) scale(.985) !important;
       pointer-events: none !important;
       filter: blur(8px) !important;
+      margin-bottom: 0 !important;
+      padding-top: 0 !important;
     }
 
 </style>
@@ -2467,13 +2470,15 @@ function renderAreaList() {
       });
       const shell = document.querySelector('.top-shell');
       if (shell) {
-        shell.classList.toggle('setup-only-hidden', currentIndex !== 0);
+        shell.classList.toggle('setup-only-hidden', !(currentIndex === 0 || currentIndex === steps.length - 1));
         shell.classList.toggle('top-hidden', false);
       }
       els.prevBtn.disabled = currentIndex === 0;
       els.nextBtn.textContent = currentIndex === steps.length - 1 ? 'Summary' : 'Next';
       renderStepNav();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo(0, 0);
     }
 
 
@@ -2976,7 +2981,7 @@ function bindPrint() {
       let accumulatedUp = 0;
 
       function updateShell() {
-        if (currentIndex !== 0) {
+        if (!(currentIndex === 0 || currentIndex === steps.length - 1)) {
           shell.classList.add('setup-only-hidden');
           shell.classList.remove('top-hidden');
           lastY = window.scrollY || 0;
