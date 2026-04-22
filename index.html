@@ -97,14 +97,14 @@
       backdrop-filter: blur(18px);
       transform: translateY(0);
       opacity: 1;
-      transition: transform .42s cubic-bezier(.2,.8,.2,1), opacity .28s ease, filter .28s ease;
-      will-change: transform, opacity;
+      transition: transform .56s cubic-bezier(.22,.8,.22,1), opacity .56s cubic-bezier(.22,.8,.22,1), filter .56s cubic-bezier(.22,.8,.22,1);
+      will-change: transform, opacity, filter;
     }
     .top-shell.top-hidden {
-      transform: translateY(calc(-100% - 10px));
-      opacity: 0;
+      transform: translateY(-18px) scale(.985);
+      opacity: .04;
       pointer-events: none;
-      filter: blur(3px);
+      filter: blur(5px);
     }
 
     .hero {
@@ -1018,6 +1018,15 @@
       font-weight: 700;
     }
 
+    .btn-status.status-press {
+      animation: statusPressPop .24s ease-out;
+    }
+    @keyframes statusPressPop {
+      0% { transform: scale(.985); }
+      45% { transform: translateY(-1px) scale(1.02); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       .top-shell,
@@ -1409,6 +1418,8 @@
       color: #f8f3ec;
       border-color: rgba(255, 214, 153, 0.1);
       box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.04);
+      transition: transform .12s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease, color .16s ease, filter .16s ease;
+      will-change: transform, box-shadow;
     }
     .btn-ghost { background: linear-gradient(180deg, rgba(25,19,20,.88), rgba(18,14,15,.9)); }
     .mini-btn.active {
@@ -1467,19 +1478,44 @@
     .room-status-badge.issue { background: rgba(239,68,68,.14); color: #fecaca; }
     .room-status-badge.skip { background: rgba(245,158,11,.16); color: #fde2a7; }
     .btn-status.ok.active {
-      background: linear-gradient(180deg, rgba(17,94,53,.34), rgba(20,83,45,.26));
-      color: #b7f0ca;
-      border-color: rgba(34,197,94,.28);
+      background: linear-gradient(180deg, rgba(22,163,74,.58), rgba(20,83,45,.52));
+      color: #ecfdf5;
+      border-color: rgba(74,222,128,.52);
+      box-shadow: 0 10px 22px rgba(22,163,74,.22), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -8px 18px rgba(0,0,0,.14);
+      filter: saturate(1.08);
+      transform: translateY(-1px);
     }
     .btn-status.issue.active {
-      background: linear-gradient(180deg, rgba(127,29,29,.34), rgba(69,10,10,.32));
-      color: #fecaca;
-      border-color: rgba(239,68,68,.3);
+      background: linear-gradient(180deg, rgba(220,38,38,.56), rgba(127,29,29,.5));
+      color: #fff1f2;
+      border-color: rgba(252,165,165,.48);
+      box-shadow: 0 10px 22px rgba(220,38,38,.22), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -8px 18px rgba(0,0,0,.16);
+      filter: saturate(1.06);
+      transform: translateY(-1px);
     }
     .btn-status.skip.active {
-      background: linear-gradient(180deg, rgba(146,64,14,.34), rgba(120,53,15,.3));
-      color: #fde2a7;
-      border-color: rgba(245,158,11,.3);
+      background: linear-gradient(180deg, rgba(245,158,11,.62), rgba(180,83,9,.5));
+      color: #fff7ed;
+      border-color: rgba(253,186,116,.52);
+      box-shadow: 0 10px 22px rgba(245,158,11,.24), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -8px 18px rgba(0,0,0,.14);
+      filter: saturate(1.08);
+      transform: translateY(-1px);
+    }
+    .btn-status:not(.active):hover,
+    .btn-status:not(.active):focus-visible {
+      border-color: rgba(255, 214, 153, 0.18);
+      box-shadow: 0 8px 18px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .btn-status.active {
+      position: relative;
+    }
+    .btn-status.active::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+      pointer-events: none;
     }
 
     .issue-box {
@@ -2145,14 +2181,19 @@ function bindCardEvents(container, rerenderFn) {
         card.querySelectorAll('[data-status]').forEach(btn => {
           btn.addEventListener('click', () => {
             const nextStatus = btn.dataset.status;
+            const sameStatus = state.checks[key].status === nextStatus;
             state.checks[key].status = nextStatus;
             if (nextStatus !== 'issue') {
               state.checks[key].note = '';
               state.checks[key].photo = '';
               state.checks[key].photoName = '';
             }
+            card.querySelectorAll('[data-status]').forEach(el => el.classList.remove('status-press'));
+            btn.classList.add('status-press');
+            setTimeout(() => btn.classList.remove('status-press'), 260);
             rerenderFn();
             persistAndRefresh();
+            if (!sameStatus) showToast(nextStatus.toUpperCase() + ' saved');
             if (nextStatus === 'issue' && !state.checks[key].photo) {
               promptIssuePhoto(key, '#' + container.id);
               showToast('Add a photo or take a picture for the issue');
@@ -2721,10 +2762,26 @@ function bindPrint() {
       const shell = document.querySelector('.top-shell');
       if (!shell) return;
       let ticking = false;
+      let lastY = window.scrollY || 0;
+      let hidden = false;
 
       function updateShell() {
-        const atTop = window.scrollY <= 8;
-        shell.classList.toggle('top-hidden', !atTop);
+        const currentY = window.scrollY || 0;
+        const delta = currentY - lastY;
+        const atTop = currentY <= 8;
+        const scrollingDown = delta > 4;
+        const scrollingUp = delta < -4;
+
+        if (atTop) {
+          hidden = false;
+        } else if (scrollingDown && currentY > 36) {
+          hidden = true;
+        } else if (scrollingUp) {
+          hidden = false;
+        }
+
+        shell.classList.toggle('top-hidden', hidden);
+        lastY = currentY;
         ticking = false;
       }
 
