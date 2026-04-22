@@ -1939,6 +1939,7 @@
 
         <div class="actions-grid" style="margin-top:14px;">
           <button class="btn" type="button" id="exportPdfBtn">Export PDF</button>
+          <button class="btn-secondary" type="button" id="sharePdfBtn">Share PDF</button>
           <button class="btn-secondary" type="button" id="downloadJsonBtn">Backup data file</button>
           <button class="btn-secondary" type="button" id="restoreJsonBtn">Restore backup file</button>
           <input type="file" id="restoreFileInput" accept="application/json" class="hidden">
@@ -2135,6 +2136,7 @@
       issueList: document.getElementById('issueList'),
       reportPreview: document.getElementById('reportPreview'),
       exportPdfBtn: document.getElementById('exportPdfBtn'),
+      sharePdfBtn: document.getElementById('sharePdfBtn'),
       downloadJsonBtn: document.getElementById('downloadJsonBtn'),
       restoreJsonBtn: document.getElementById('restoreJsonBtn'),
       restoreFileInput: document.getElementById('restoreFileInput'),
@@ -2577,8 +2579,7 @@ function renderAreaList() {
       els.jumpSummaryBtn.addEventListener('click', () => showSection(steps.length - 1));
     }
 
-    function downloadFile(name, content, type) {
-      const blob = new Blob([content], { type });
+    function downloadBlobFile(name, blob) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -2586,7 +2587,12 @@ function renderAreaList() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1200);
+    }
+
+    function downloadFile(name, content, type) {
+      const blob = new Blob([content], { type });
+      downloadBlobFile(name, blob);
     }
 
     function bindBackupActions() {
@@ -2832,6 +2838,320 @@ function renderPrintSheet() {
       `;
     }
 
+
+    function dataUrlToBytes(dataUrl) {
+      const base64 = String(dataUrl).split(',')[1] || '';
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    async function dataUrlToJpegInfo(dataUrl, maxDim = 1200, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, maxDim / Math.max(img.width || 1, img.height || 1));
+          const width = Math.max(1, Math.round((img.width || 1) * scale));
+          const height = Math.max(1, Math.round((img.height || 1) * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          const jpegUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve({
+            width,
+            height,
+            bytes: dataUrlToBytes(jpegUrl)
+          });
+        };
+        img.onerror = () => reject(new Error('Image could not be prepared for PDF'));
+        img.src = dataUrl;
+      });
+    }
+
+    function escapePdfText(value) {
+      return String(value || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/\(/g, '\\(')
+        .replace(/\)/g, '\\)')
+        .replace(/\r/g, ' ')
+        .replace(/\n/g, ' ');
+    }
+
+    function wrapPdfText(text, maxChars = 88) {
+      const words = String(text || '').split(/\s+/).filter(Boolean);
+      if (!words.length) return [''];
+      const lines = [];
+      let current = '';
+      words.forEach(word => {
+        const next = current ? current + ' ' + word : word;
+        if (next.length > maxChars && current) {
+          lines.push(current);
+          current = word;
+        } else {
+          current = next;
+        }
+      });
+      if (current) lines.push(current);
+      return lines;
+    }
+
+    function makePdfBuilder(pageW = 595, pageH = 842, margin = 40) {
+      const pages = [];
+      let current = null;
+
+      function startPage() {
+        current = { commands: [], cursor: 42 };
+        pages.push(current);
+      }
+
+      function ensureSpace(height) {
+        if (!current) startPage();
+        if (current.cursor + height > pageH - 42) startPage();
+      }
+
+      function addLine(text, size = 12, font = 'F1', x = margin, color = '0 0 0') {
+        ensureSpace(size + 8);
+        const y = pageH - current.cursor - size;
+        current.commands.push(`BT /${font} ${size} Tf ${color} rg 1 0 0 1 ${x} ${y} Tm (${escapePdfText(text)}) Tj ET`);
+        current.cursor += size + 8;
+      }
+
+      function addWrapped(text, size = 11, font = 'F1', x = margin, maxChars = 88, color = '0 0 0') {
+        wrapPdfText(text, maxChars).forEach(line => addLine(line, size, font, x, color));
+      }
+
+      function addGap(height = 8) {
+        ensureSpace(height);
+        current.cursor += height;
+      }
+
+      function addRule() {
+        ensureSpace(10);
+        const y = pageH - current.cursor;
+        current.commands.push(`0.75 w 0.84 0.84 0.84 RG ${margin} ${y} m ${pageW - margin} ${y} l S`);
+        current.cursor += 10;
+      }
+
+      function addImage(name, displayW, displayH, x = margin) {
+        ensureSpace(displayH + 8);
+        const yBottom = pageH - current.cursor - displayH;
+        current.commands.push(`q ${displayW} 0 0 ${displayH} ${x} ${yBottom} cm /${name} Do Q`);
+        current.cursor += displayH + 8;
+      }
+
+      return { pages, startPage, addLine, addWrapped, addGap, addRule, addImage, get current() { return current; }, pageW, pageH, margin };
+    }
+
+    async function buildShareablePdfBlob() {
+      const stats = calcStats();
+      const allItems = Object.values(state.checks);
+      const issuesOnly = !!state.settings.issuesOnlyExport;
+      const listedItems = issuesOnly ? allItems.filter(item => item.status === 'issue') : allItems.filter(item => item.status);
+      const issuePhotos = allItems.filter(item => item.status === 'issue' && item.photo);
+      const declarationText = `I ${state.declaredBy || '________________'} declare that I completed the facility handover inspection, recorded the condition of each venue honestly, and attached notes and photos for every issue flagged.`;
+
+      const imageSources = [];
+      if (PDF_LOGOS && PDF_LOGOS.bha) imageSources.push({ key: 'bhaLogo', dataUrl: PDF_LOGOS.bha });
+      if (PDF_LOGOS && PDF_LOGOS.cfc) imageSources.push({ key: 'cfcLogo', dataUrl: PDF_LOGOS.cfc });
+      if (state.signatures.bha) imageSources.push({ key: 'bhaSign', dataUrl: state.signatures.bha });
+      if (state.signatures.cfci) imageSources.push({ key: 'cfcSign', dataUrl: state.signatures.cfci });
+      issuePhotos.forEach((item, index) => imageSources.push({ key: `photo${index}`, dataUrl: item.photo }));
+
+      const imageMap = {};
+      for (const source of imageSources) {
+        imageMap[source.key] = await dataUrlToJpegInfo(source.dataUrl);
+      }
+
+      const doc = makePdfBuilder();
+      doc.startPage();
+      if (imageMap.bhaLogo) doc.addImage('ImBhaLogo', 64, 64, 40);
+      if (imageMap.cfcLogo) doc.addImage('ImCfcLogo', 64, 64, doc.pageW - 104);
+      doc.current.cursor = 52;
+      doc.addLine('Facility Handover Report', 20, 'F2', 120);
+      doc.addLine('BenHale Academy and Christian Family Church Johannesburg East', 11, 'F1', 120, '0.36 0.20 0.08');
+      doc.addGap(6);
+      doc.addWrapped(`Date: ${state.date || 'Not set'}    Day: ${state.day || 'Not set'}`, 11, 'F1', 40, 95);
+      doc.addWrapped(`Declared by: ${state.declaredBy || 'Not entered'}`, 11, 'F1', 40, 95);
+      doc.addWrapped(`Staff on duty: ${state.staffOnDuty || 'Not selected'}`, 11, 'F1', 40, 95);
+      doc.addRule();
+      doc.addLine('Key Stats', 14, 'F2', 40);
+      doc.addWrapped(`Completion: ${stats.percent}%    OK: ${stats.ok}    Issues: ${stats.issue}    Skipped: ${stats.skip}`, 11, 'F1', 40, 95);
+      doc.addGap(4);
+      doc.addLine('Declaration', 14, 'F2', 40);
+      doc.addWrapped(declarationText, 11, 'F1', 40, 92);
+      doc.addGap(4);
+      doc.addLine('Notes', 14, 'F2', 40);
+      [['Venues', state.notes.venues], ['Restrooms', state.notes.restrooms], ['Play Areas', state.notes.playAreas], ['General', state.notes.general]].forEach(([label, value]) => {
+        doc.addWrapped(`${label}: ${value || 'No note added.'}`, 11, 'F1', 40, 92);
+        doc.addGap(2);
+      });
+      doc.addRule();
+      doc.addLine('Representative Signatures', 14, 'F2', 40);
+      if (imageMap.bhaSign) {
+        doc.addLine('BHA Signature', 11, 'F2', 40);
+        doc.addImage('ImBhaSign', 220, 74, 40);
+      } else {
+        doc.addWrapped('BHA Signature: Not captured.', 11, 'F1', 40, 92);
+      }
+      if (imageMap.cfcSign) {
+        doc.addLine('CFC Signature', 11, 'F2', 40);
+        doc.addImage('ImCfcSign', 220, 74, 40);
+      } else {
+        doc.addWrapped('CFC Signature: Not captured.', 11, 'F1', 40, 92);
+      }
+
+      doc.startPage();
+      doc.addLine(issuesOnly ? 'Flagged Issues Only' : 'Checklist Results', 18, 'F2', 40);
+      doc.addGap(4);
+      if (!listedItems.length) {
+        doc.addWrapped('No checklist items are available for this export.', 11, 'F1', 40, 92);
+      } else {
+        listedItems.forEach((item, index) => {
+          doc.addLine(`${index + 1}. ${item.area}  |  ${item.group}  |  ${String(item.status || '').toUpperCase()}`, 11, 'F2', 40);
+          doc.addWrapped(`Note: ${item.note || 'No issue note added.'}`, 10, 'F1', 52, 84, '0.25 0.25 0.25');
+          doc.addGap(4);
+        });
+      }
+
+      if (issuePhotos.length) {
+        issuePhotos.forEach((item, index) => {
+          const key = `photo${index}`;
+          const info = imageMap[key];
+          if (!info) return;
+          doc.startPage();
+          doc.addLine(`Issue Photo ${index + 1}`, 18, 'F2', 40);
+          doc.addWrapped(`Venue: ${item.area}`, 11, 'F1', 40, 92);
+          doc.addWrapped(`Group: ${item.group}`, 11, 'F1', 40, 92);
+          doc.addWrapped(`Note: ${item.note || 'No issue note added.'}`, 11, 'F1', 40, 92);
+          doc.addGap(10);
+          const maxW = 500;
+          const maxH = 560;
+          const scale = Math.min(maxW / info.width, maxH / info.height, 1);
+          const drawW = Math.round(info.width * scale);
+          const drawH = Math.round(info.height * scale);
+          doc.addImage(`ImPhoto${index}`, drawW, drawH, 40);
+        });
+      }
+
+      const encoder = new TextEncoder();
+      const objects = [];
+      function pushObject(data) { objects.push(data); return objects.length; }
+      function asBytes(value) { return value instanceof Uint8Array ? value : encoder.encode(String(value)); }
+      function concatBytes(parts) {
+        const arrays = parts.map(asBytes);
+        const total = arrays.reduce((sum, part) => sum + part.length, 0);
+        const out = new Uint8Array(total);
+        let offset = 0;
+        arrays.forEach(part => { out.set(part, offset); offset += part.length; });
+        return out;
+      }
+
+      const fontRegular = pushObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+      const fontBold = pushObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
+
+      const imageRefs = {};
+      function addJpegImage(name, info) {
+        if (!info) return;
+        const dict = `<< /Type /XObject /Subtype /Image /Width ${info.width} /Height ${info.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${info.bytes.length} >>\nstream\n`;
+        const end = '\nendstream';
+        imageRefs[name] = pushObject(concatBytes([dict, info.bytes, end]));
+      }
+      addJpegImage('ImBhaLogo', imageMap.bhaLogo);
+      addJpegImage('ImCfcLogo', imageMap.cfcLogo);
+      addJpegImage('ImBhaSign', imageMap.bhaSign);
+      addJpegImage('ImCfcSign', imageMap.cfcSign);
+      issuePhotos.forEach((item, index) => addJpegImage(`ImPhoto${index}`, imageMap[`photo${index}`]));
+
+      const pageObjNums = [];
+      const contentObjNums = [];
+      const xObjectEntries = Object.entries(imageRefs).map(([name, ref]) => `/${name} ${ref} 0 R`).join(' ');
+      const fontEntries = `/F1 ${fontRegular} 0 R /F2 ${fontBold} 0 R`;
+
+      const pagesRootPlaceholder = objects.length + 1; // used after streams/pages are appended
+
+      doc.pages.forEach(page => {
+        const streamBytes = encoder.encode(page.commands.join('\n'));
+        const contentRef = pushObject(concatBytes([`<< /Length ${streamBytes.length} >>\nstream\n`, streamBytes, '\nendstream']));
+        contentObjNums.push(contentRef);
+        const pageDict = `<< /Type /Page /Parent PAGESROOT 0 R /MediaBox [0 0 ${doc.pageW} ${doc.pageH}] /Resources << /Font << ${fontEntries} >> /XObject << ${xObjectEntries} >> >> /Contents ${contentRef} 0 R >>`;
+        const pageRef = pushObject(pageDict);
+        pageObjNums.push(pageRef);
+      });
+
+      const pagesRoot = pushObject(`<< /Type /Pages /Count ${pageObjNums.length} /Kids [${pageObjNums.map(n => `${n} 0 R`).join(' ')}] >>`);
+      const catalog = pushObject(`<< /Type /Catalog /Pages ${pagesRoot} 0 R >>`);
+
+      const finalObjects = objects.map((obj, idx) => {
+        let bytes = asBytes(obj);
+        if (bytes instanceof Uint8Array) {
+          // replace placeholder if present in textual objects
+          const txt = new TextDecoder().decode(bytes);
+          if (txt.includes('PAGESROOT')) bytes = encoder.encode(txt.replace('PAGESROOT', String(pagesRoot)));
+        }
+        return bytes;
+      });
+
+      const chunks = [encoder.encode('%PDF-1.4\n')];
+      const offsets = [0];
+      let position = chunks[0].length;
+      finalObjects.forEach((obj, index) => {
+        offsets.push(position);
+        const prefix = encoder.encode(`${index + 1} 0 obj\n`);
+        const suffix = encoder.encode('\nendobj\n');
+        chunks.push(prefix, obj, suffix);
+        position += prefix.length + obj.length + suffix.length;
+      });
+
+      const xrefStart = position;
+      let xref = `xref\n0 ${finalObjects.length + 1}\n0000000000 65535 f \n`;
+      for (let i = 1; i < offsets.length; i++) {
+        xref += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+      }
+      const trailer = `trailer\n<< /Size ${finalObjects.length + 1} /Root ${catalog} 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+      chunks.push(encoder.encode(xref), encoder.encode(trailer));
+      return new Blob(chunks, { type: 'application/pdf' });
+    }
+
+    async function handleSharePdf() {
+      try {
+        if (els.sharePdfBtn) {
+          els.sharePdfBtn.disabled = true;
+          els.sharePdfBtn.textContent = 'Preparing PDF...';
+        }
+        const blob = await buildShareablePdfBlob();
+        const filename = `facility_handover_${state.date || 'undated'}.pdf`;
+        const file = new File([blob], filename, { type: 'application/pdf' });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'Facility Handover Report',
+            text: 'Facility handover report PDF'
+          });
+          showToast('Share sheet opened');
+        } else {
+          downloadBlobFile(filename, blob);
+          showToast('PDF downloaded. Attach it in WhatsApp from Downloads.');
+        }
+      } catch (error) {
+        showToast('PDF could not be shared');
+      } finally {
+        if (els.sharePdfBtn) {
+          els.sharePdfBtn.disabled = false;
+          els.sharePdfBtn.textContent = 'Share PDF';
+        }
+      }
+    }
+
+    function bindSharePdf() {
+      if (!els.sharePdfBtn) return;
+      els.sharePdfBtn.addEventListener('click', handleSharePdf);
+    }
+
 function bindPrint() {
       els.exportPdfBtn.addEventListener('click', () => {
         renderPrintSheet();
@@ -3050,6 +3370,7 @@ function bindPrint() {
       bindNav();
       bindBackupActions();
       bindPrint();
+      bindSharePdf();
       bindSignatureControls();
       bindTopShell();
       rerenderAll();
