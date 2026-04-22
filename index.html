@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1220">
-  <title>Facility Handover v13 Mobile Premium</title>
+  <title>Facility Handover v15 Install Guide</title>
   <style>
     :root {
       --bg: #09111f;
@@ -1022,6 +1022,159 @@
       }
     }
 
+
+    .install-guide {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 18px 12px calc(18px + var(--safe-bottom));
+      background: rgba(15,23,42,0.26);
+      backdrop-filter: blur(10px);
+    }
+    .install-guide.show { display: flex; }
+    .install-sheet {
+      width: min(100%, 760px);
+      border-radius: 30px;
+      background: rgba(255,255,255,0.98);
+      border: 1px solid rgba(255,255,255,0.92);
+      box-shadow: 0 28px 80px rgba(15,23,42,0.24);
+      overflow: hidden;
+      transform: translateY(0);
+    }
+    .install-grab {
+      width: 72px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148,163,184,0.5);
+      margin: 14px auto 2px;
+    }
+    .install-body { padding: 18px; display: grid; gap: 14px; }
+    .install-head {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+    .install-icon {
+      width: 92px;
+      height: 92px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, #5f7fc7, #274488);
+      box-shadow: 0 18px 34px rgba(37,99,235,0.22), inset 0 1px 0 rgba(255,255,255,0.35);
+      position: relative;
+    }
+    .install-icon::before {
+      content: '';
+      position: absolute;
+      inset: 16px 24px;
+      border: 4px solid rgba(255,255,255,0.92);
+      border-radius: 16px;
+    }
+    .install-icon::after {
+      content: '⌂';
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -36%);
+      color: #fff;
+      font-size: 26px;
+      font-weight: 900;
+    }
+    .install-title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: #0f172a;
+    }
+    .install-copy {
+      margin: 8px 0 0;
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 420px;
+    }
+    .install-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      padding: 4px;
+      background: #f8fafc;
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 18px;
+    }
+    .install-tab {
+      min-height: 46px;
+      border: 0;
+      border-radius: 14px;
+      background: transparent;
+      color: #334155;
+      font-weight: 900;
+    }
+    .install-tab.active {
+      background: linear-gradient(180deg, #e8f0ff, #f8fbff);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+      color: #0f172a;
+    }
+    .install-steps { display: grid; gap: 10px; }
+    .install-step {
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
+      gap: 14px;
+      align-items: center;
+      min-height: 58px;
+      padding: 0 12px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(226,232,240,0.95);
+      box-shadow: var(--shadow-sm);
+    }
+    .install-step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 900;
+      color: #22335f;
+      background: linear-gradient(180deg, #eff6ff, #dbeafe);
+    }
+    .install-step-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: #334155;
+      line-height: 1.4;
+    }
+    .install-step-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(226,232,240,1);
+      box-shadow: var(--shadow-sm);
+      color: #0f172a;
+      font-size: 20px;
+      font-weight: 900;
+    }
+    .install-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 719px) {
+      .install-head { grid-template-columns: 76px 1fr; }
+      .install-icon { width: 72px; height: 72px; border-radius: 20px; }
+      .install-actions { grid-template-columns: 1fr; }
+    }
+
     @media (min-width: 720px) {
       .app { padding-left: 18px; padding-right: 18px; }
       .hero { padding: 22px; }
@@ -1177,10 +1330,8 @@
           <label class="label">Quick actions</label>
           <div class="quick-actions">
             <button class="mini-btn" type="button" id="fillTodayBtn">Use today</button>
-            <button class="mini-btn" type="button" id="autofillNameBtn">Use Dylan Grobler</button>
-            <button class="mini-btn" type="button" id="sampleBtn">Load sample</button>
-            <button class="mini-btn mini-warn" type="button" id="resetBtn">Reset handover</button>
-            <button class="mini-btn mini-danger" type="button" id="restartBtn">Restart app</button>
+            <button class="mini-btn mini-warn" type="button" id="resetBtn">Clear All Fields</button>
+            <button class="mini-btn mini-danger" type="button" id="restartBtn">Restart Handover</button>
           </div>
         </div>
       </div></div>
@@ -1343,6 +1494,31 @@
     </div>
   </div>
 
+
+  <div id="installGuide" class="install-guide" aria-hidden="true">
+    <div class="install-sheet" role="dialog" aria-modal="true" aria-labelledby="installGuideTitle">
+      <div class="install-grab"></div>
+      <div class="install-body">
+        <div class="install-head">
+          <div class="install-icon" aria-hidden="true"></div>
+          <div>
+            <h3 id="installGuideTitle" class="install-title">Add to Home Screen</h3>
+            <p class="install-copy">Install this app for faster access and a smoother handover workflow.</p>
+          </div>
+        </div>
+        <div class="install-tabs">
+          <button class="install-tab active" type="button" data-install-platform="android">Android</button>
+          <button class="install-tab" type="button" data-install-platform="iphone">iPhone</button>
+        </div>
+        <div id="installSteps" class="install-steps"></div>
+        <div class="install-actions">
+          <button class="btn" type="button" id="installGuideCloseBtn">Got it</button>
+          <button class="btn-secondary" type="button" id="installGuideDismissBtn">Don’t show again</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" aria-live="polite"></div>
   <section id="printSheet" class="print-sheet"></section>
 
@@ -1378,25 +1554,18 @@
       { key: 'done', label: 'Done' }
     ];
 
-    const sampleState = {
-      date: new Date().toISOString().slice(0, 10),
-      day: 'Sunday',
-      declaredBy: 'Dylan Grobler',
-      staffOnDuty: 'Dylan',
-      notes: {
-        venues: 'All venues checked. Room 4 window latch loose.',
-        restrooms: 'Girls Joshuas tap dripping slightly.',
-        playAreas: 'Main play area clear and safe.',
-        general: 'Keys returned and final walk-through completed.'
-      },
-      signatures: { bha: '', cfci: '' },
-      settings: {
-        issuesOnlyExport: false,
-        areaSearch: '',
-        restroomSearch: '',
-        areaFilter: 'all',
-        restroomFilter: 'all'
-      }
+    const INSTALL_GUIDE_DISMISSED_KEY = 'facility-handover-install-guide-dismissed';
+    const installStepsByPlatform = {
+      android: [
+        { n: '1', text: 'Open your browser menu', icon: '⋮' },
+        { n: '2', text: 'Tap “Add to Home Screen”', icon: '⊞' },
+        { n: '3', text: 'Tap “Add” or “Install”', icon: '+' }
+      ],
+      iphone: [
+        { n: '1', text: 'Tap the Share button in Safari', icon: '↑' },
+        { n: '2', text: 'Choose “Add to Home Screen”', icon: '⊞' },
+        { n: '3', text: 'Tap “Add” in the top corner', icon: '+' }
+      ]
     };
 
     function buildChecks() {
@@ -1473,10 +1642,12 @@
       declaredBy: document.getElementById('declaredBy'),
       staffOnDuty: document.getElementById('staffOnDuty'),
       fillTodayBtn: document.getElementById('fillTodayBtn'),
-      autofillNameBtn: document.getElementById('autofillNameBtn'),
-      sampleBtn: document.getElementById('sampleBtn'),
       resetBtn: document.getElementById('resetBtn'),
       restartBtn: document.getElementById('restartBtn'),
+      installGuide: document.getElementById('installGuide'),
+      installSteps: document.getElementById('installSteps'),
+      installGuideCloseBtn: document.getElementById('installGuideCloseBtn'),
+      installGuideDismissBtn: document.getElementById('installGuideDismissBtn'),
       roomList: document.getElementById('roomList'),
       restroomList: document.getElementById('restroomList'),
       areaSearch: document.getElementById('areaSearch'),
@@ -1808,6 +1979,35 @@ function renderAreaList() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+
+    function renderInstallGuide(platform) {
+      const steps = installStepsByPlatform[platform] || installStepsByPlatform.android;
+      document.querySelectorAll('[data-install-platform]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.installPlatform === platform);
+      });
+      els.installSteps.innerHTML = steps.map(step => `
+        <div class="install-step">
+          <div class="install-step-num">${step.n}</div>
+          <div class="install-step-text">${escapeHtml(step.text)}</div>
+          <div class="install-step-icon">${escapeHtml(step.icon)}</div>
+        </div>
+      `).join('');
+    }
+
+    function showInstallGuide() {
+      if (!els.installGuide) return;
+      renderInstallGuide('android');
+      els.installGuide.classList.add('show');
+      els.installGuide.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideInstallGuide(remember) {
+      if (!els.installGuide) return;
+      els.installGuide.classList.remove('show');
+      els.installGuide.setAttribute('aria-hidden', 'true');
+      if (remember) localStorage.setItem(INSTALL_GUIDE_DISMISSED_KEY, '1');
+    }
+
     function bindFields() {
       syncFields();
       els.date.addEventListener('input', e => { state.date = e.target.value; persistAndRefresh(); });
@@ -1839,27 +2039,8 @@ function renderAreaList() {
         persistAndRefresh(true);
       });
 
-      els.autofillNameBtn.addEventListener('click', () => {
-        state.declaredBy = 'Dylan Grobler';
-        syncFields();
-        persistAndRefresh(true);
-      });
-
-      els.sampleBtn.addEventListener('click', () => {
-        const fresh = getInitialState();
-        state = { ...fresh, ...sampleState, checks: { ...fresh.checks } };
-        state.checks['classroom::Room 1'].status = 'ok';
-        state.checks['classroom::Room 4'].status = 'issue';
-        state.checks['classroom::Room 4'].note = 'Window latch loose';
-        state.checks['restroom::Girls - Joshuas'].status = 'issue';
-        state.checks['restroom::Girls - Joshuas'].note = 'Tap dripping';
-        clearAllSignatures(false);
-        rerenderAll();
-        saveState(true);
-      });
-
       els.resetBtn.addEventListener('click', () => {
-        if (!confirm('Reset the full handover form?')) return;
+        if (!confirm('Clear all fields in the current handover?')) return;
         state = getInitialState();
         clearAllSignatures(false);
         currentIndex = 0;
@@ -1869,9 +2050,18 @@ function renderAreaList() {
       });
 
       els.restartBtn.addEventListener('click', () => {
-        if (!confirm('Restart the app and clear all saved data?')) return;
+        if (!confirm('Restart handover and reload this app?')) return;
         localStorage.removeItem(STORAGE_KEY);
         window.location.reload();
+      });
+
+      document.querySelectorAll('[data-install-platform]').forEach(btn => {
+        btn.addEventListener('click', () => renderInstallGuide(btn.dataset.installPlatform));
+      });
+      els.installGuideCloseBtn.addEventListener('click', () => hideInstallGuide(false));
+      els.installGuideDismissBtn.addEventListener('click', () => hideInstallGuide(true));
+      els.installGuide.addEventListener('click', e => {
+        if (e.target === els.installGuide) hideInstallGuide(false);
       });
     }
 
@@ -2253,6 +2443,9 @@ function bindPrint() {
       bindTopShell();
       rerenderAll();
       showSection(0);
+      if (!localStorage.getItem(INSTALL_GUIDE_DISMISSED_KEY)) {
+        setTimeout(() => showInstallGuide(), 350);
+      }
     }
 
     init();
