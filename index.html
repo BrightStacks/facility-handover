@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1220">
-  <title>Facility Handover v3.2.3</title>
+  <title>Facility Handover v15 Install Guide</title>
   <style>
     :root {
       --bg: #09111f;
@@ -548,9 +548,9 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
     }
     .btn-status.ok.active {
-      background: linear-gradient(180deg, #ecfdf5, #d1fae5);
-      color: var(--ok);
-      border-color: rgba(16,185,129,0.28);
+      background: linear-gradient(180deg, #f0fdf4, #dcfce7);
+      color: #16a34a;
+      border-color: rgba(74,222,128,0.34);
     }
     .btn-status.issue.active {
       background: linear-gradient(180deg, #fef2f2, #fee2e2);
@@ -1027,6 +1027,69 @@
       100% { transform: translateY(0) scale(1); }
     }
 
+    
+    .report-preview {
+      margin-top: 16px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255,214,153,0.12);
+      background: linear-gradient(180deg, rgba(25,18,19,.98), rgba(17,13,14,.98));
+      box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .report-preview-head {
+      padding: 16px;
+      border-bottom: 1px solid rgba(255,214,153,0.08);
+      background: linear-gradient(135deg, rgba(84,25,18,.38), rgba(28,16,16,.2));
+    }
+    .report-preview-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #fff5ea;
+    }
+    .report-preview-sub {
+      margin: 6px 0 0;
+      color: #d1bfae;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .report-preview-body { padding: 16px; display: grid; gap: 14px; }
+    .preview-meta-grid, .preview-sign-grid, .preview-photo-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .preview-meta-card, .preview-sign-card, .preview-note-card, .preview-photo-card {
+      border-radius: 18px;
+      border: 1px solid rgba(255,214,153,0.1);
+      background: linear-gradient(180deg, rgba(32,24,25,.96), rgba(18,14,15,.98));
+      box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.04);
+      padding: 14px;
+    }
+    .preview-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #bfa995; font-weight: 800; margin-bottom: 6px; }
+    .preview-value { color: #fff5ea; font-size: 15px; font-weight: 700; line-height: 1.45; }
+    .preview-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .preview-stat {
+      border-radius: 16px;
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
+      border: 1px solid rgba(255,214,153,0.08);
+    }
+    .preview-stat .preview-label { margin-bottom: 8px; }
+    .preview-stat-value { color: #fff8ef; font-size: 26px; font-weight: 900; letter-spacing: -0.04em; }
+    .preview-note-card p { margin: 0; color: #eadac8; font-size: 13px; line-height: 1.55; white-space: pre-wrap; }
+    .preview-sign-image {
+      display: block; width: 100%; height: 90px; object-fit: contain; background: rgba(255,255,255,0.98); border-radius: 14px; border: 1px solid rgba(255,214,153,0.12);
+    }
+    .preview-empty { color: #a89684; font-size: 13px; }
+    .preview-photo-grid { grid-template-columns: repeat(2, 1fr); }
+    .preview-photo-card img { display:block; width:100%; height:132px; object-fit:cover; border-radius:14px; margin-bottom:10px; }
+    .preview-photo-card .preview-value { font-size: 13px; font-weight: 600; }
+    @media (min-width: 720px) {
+      .preview-meta-grid, .preview-sign-grid { grid-template-columns: repeat(2, 1fr); }
+      .report-preview-body { gap: 16px; }
+    }
+    @media (max-width: 719px) {
+      .preview-photo-grid { grid-template-columns: 1fr; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       .top-shell,
@@ -1260,6 +1323,40 @@
       transform: translateY(-2px);
       box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
     }
+
+    .switch-row {
+      transition: background .35s ease, border-color .35s ease, box-shadow .35s ease, transform .22s ease;
+      cursor: pointer;
+    }
+    .switch-row.active {
+      background: linear-gradient(180deg, rgba(92,38,16,0.92), rgba(44,23,16,0.96));
+      border-color: rgba(245,158,11,.28);
+      box-shadow: 0 16px 30px rgba(0,0,0,.28), 0 0 0 1px rgba(245,158,11,.08), inset 0 1px 0 rgba(255,255,255,.05);
+      transform: translateY(-1px);
+    }
+    .switch-row.active .label {
+      color: #fff3e0;
+    }
+    .switch-row.active .small {
+      color: #f8d8a6;
+    }
+    .switch-row-status {
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      color: #b9a899;
+    }
+    .switch-row.active .switch-row-status {
+      color: #ffd38a;
+    }
+    .top-shell.setup-only-hidden {
+      opacity: 0 !important;
+      transform: translateY(-24px) scale(.985) !important;
+      pointer-events: none !important;
+      filter: blur(8px) !important;
+    }
+
 </style>
 
   <style id="v18-premium-warm-theme-overrides">
@@ -1817,18 +1914,24 @@
         </div>
 
         <div class="field">
-          <div class="switch-row">
+          <label class="switch-row" id="issuesOnlyExportRow" for="issuesOnlyExport">
             <div>
               <div class="label" style="margin-bottom:4px;">Include only issues in PDF details</div>
-              <div class="small">Shorter export. Easier to review.</div>
+              <div class="small" id="issuesOnlyExportHelp">Shorter export. Easier to review.</div>
+              <div class="switch-row-status" id="issuesOnlyExportStatus">Currently off. Export will include all checked venues.</div>
             </div>
             <input type="checkbox" id="issuesOnlyExport">
-          </div>
+          </label>
         </div>
 
         <div class="field">
           <label class="label">Flagged issues</label>
           <div id="issueList" class="issue-list"></div>
+        </div>
+
+        <div class="field">
+          <label class="label">Report preview</label>
+          <div id="reportPreview" class="report-preview"></div>
         </div>
 
         <div class="actions-grid" style="margin-top:14px;">
@@ -2027,6 +2130,7 @@
       statSkip: document.getElementById('statSkip'),
       statCompletion: document.getElementById('statCompletion'),
       issueList: document.getElementById('issueList'),
+      reportPreview: document.getElementById('reportPreview'),
       exportPdfBtn: document.getElementById('exportPdfBtn'),
       downloadJsonBtn: document.getElementById('downloadJsonBtn'),
       restoreJsonBtn: document.getElementById('restoreJsonBtn'),
@@ -2059,8 +2163,24 @@
       els.playAreasNote.value = state.notes.playAreas;
       els.generalNote.value = state.notes.general;
       els.issuesOnlyExport.checked = !!state.settings.issuesOnlyExport;
+      updateIssuesOnlyExportUI();
       els.areaSearch.value = state.settings.areaSearch || '';
       els.restroomSearch.value = state.settings.restroomSearch || '';
+    }
+
+    function updateIssuesOnlyExportUI() {
+      const active = !!state.settings.issuesOnlyExport;
+      if (els.issuesOnlyExportRow) els.issuesOnlyExportRow.classList.toggle('active', active);
+      if (els.issuesOnlyExportHelp) {
+        els.issuesOnlyExportHelp.textContent = active
+          ? 'Only venues with issues will appear in the detailed export section.'
+          : 'Shorter export. Easier to review.';
+      }
+      if (els.issuesOnlyExportStatus) {
+        els.issuesOnlyExportStatus.textContent = active
+          ? 'Selected. Export will focus on issue-only detail pages.'
+          : 'Currently off. Export will include all checked venues.';
+      }
     }
 
     function escapeHtml(value) {
@@ -2193,10 +2313,8 @@ function bindCardEvents(container, rerenderFn) {
             setTimeout(() => btn.classList.remove('status-press'), 260);
             rerenderFn();
             persistAndRefresh();
-            if (!sameStatus) showToast(nextStatus.toUpperCase() + ' saved');
-            if (nextStatus === 'issue' && !state.checks[key].photo) {
-              promptIssuePhoto(key, '#' + container.id);
-              showToast('Add a photo or take a picture for the issue');
+            if (!sameStatus) {
+              showToast(nextStatus === 'issue' ? 'Issue opened. Add your note, then add a photo if needed.' : nextStatus.toUpperCase() + ' saved');
             }
           });
         });
@@ -2259,41 +2377,50 @@ function renderAreaList() {
 
     function calcStats() {
       const items = Object.values(state.checks);
-      let done = 0;
       let ok = 0;
       let issue = 0;
       let skip = 0;
+      let checkedComplete = 0;
+
       items.forEach(item => {
-        if (item.status) done++;
-        if (item.status === 'ok') ok++;
-        if (item.status === 'issue') issue++;
+        if (item.status === 'ok') {
+          ok++;
+          checkedComplete++;
+        }
+        if (item.status === 'issue') {
+          issue++;
+          checkedComplete++;
+        }
         if (item.status === 'skip') skip++;
       });
 
-      const requiredFields = [
+      const setupFields = [
         state.date,
         state.day,
         state.declaredBy.trim(),
-        state.staffOnDuty.trim(),
-        state.notes.venues.trim(),
-        state.notes.restrooms.trim(),
-        state.notes.playAreas.trim(),
-        state.notes.general.trim(),
+        state.staffOnDuty.trim()
+      ];
+      const signatureFields = [
         state.signatures.bha,
         state.signatures.cfci
       ];
-      done += requiredFields.filter(Boolean).length;
-      const total = items.length + requiredFields.length;
+
+      const setupDone = setupFields.filter(Boolean).length;
+      const signaturesDone = signatureFields.filter(Boolean).length;
+      const done = checkedComplete + setupDone + signaturesDone;
+      const total = items.length + setupFields.length + signatureFields.length;
       const percent = Math.round((done / total) * 100);
-      return { done, total, ok, issue, skip, percent };
+      const isComplete = setupDone === setupFields.length && signaturesDone === signatureFields.length && checkedComplete === items.length;
+
+      return { done, total, ok, issue, skip, percent: isComplete ? 100 : percent, isComplete };
     }
 
     function refreshDashboard() {
       const stats = calcStats();
       els.progressFill.style.width = stats.percent + '%';
       els.progressText.textContent = stats.percent + '%';
-      els.completionBadge.textContent = stats.percent === 100 ? 'Complete' : 'Incomplete';
-      els.completionBadge.className = 'badge ' + (stats.percent === 100 ? 'complete' : 'incomplete');
+      els.completionBadge.textContent = stats.isComplete ? 'Complete' : 'Incomplete';
+      els.completionBadge.className = 'badge ' + (stats.isComplete ? 'complete' : 'incomplete');
       els.heroOk.textContent = stats.ok;
       els.heroIssue.textContent = stats.issue;
       els.heroSkip.textContent = stats.skip;
@@ -2317,6 +2444,7 @@ function renderAreaList() {
     function persistAndRefresh(flash) {
       saveState(flash);
       refreshDashboard();
+      renderReportPreview();
       renderStepNav();
     }
 
@@ -2337,6 +2465,11 @@ function renderAreaList() {
       steps.forEach((step, i) => {
         document.getElementById('section-' + step.key).classList.toggle('active', i === currentIndex);
       });
+      const shell = document.querySelector('.top-shell');
+      if (shell) {
+        shell.classList.toggle('setup-only-hidden', currentIndex !== 0);
+        shell.classList.toggle('top-hidden', false);
+      }
       els.prevBtn.disabled = currentIndex === 0;
       els.nextBtn.textContent = currentIndex === steps.length - 1 ? 'Summary' : 'Next';
       renderStepNav();
@@ -2382,7 +2515,7 @@ function renderAreaList() {
       els.restroomsNote.addEventListener('input', e => { state.notes.restrooms = e.target.value; persistAndRefresh(); });
       els.playAreasNote.addEventListener('input', e => { state.notes.playAreas = e.target.value; persistAndRefresh(); });
       els.generalNote.addEventListener('input', e => { state.notes.general = e.target.value; persistAndRefresh(); });
-      els.issuesOnlyExport.addEventListener('change', e => { state.settings.issuesOnlyExport = e.target.checked; persistAndRefresh(); });
+      els.issuesOnlyExport.addEventListener('change', e => { state.settings.issuesOnlyExport = e.target.checked; updateIssuesOnlyExportUI(); persistAndRefresh(); });
 
       els.areaSearch.addEventListener('input', e => {
         state.settings.areaSearch = e.target.value;
@@ -2497,6 +2630,81 @@ function renderAreaList() {
       }
       if (status === 'issue') return '<span class="mark-wrap"><span class="mark-box issue-mark">✕</span></span>';
       return '<span class="mark-wrap"><span class="mark-box empty-mark">•</span></span>';
+    }
+
+
+function renderReportPreview() {
+      const stats = calcStats();
+      const photos = Object.values(state.checks).filter(item => item.status === 'issue' && item.photo).slice(0, 6);
+      const noteCards = [
+        ['Venues note', state.notes.venues],
+        ['Restrooms note', state.notes.restrooms],
+        ['Play areas note', state.notes.playAreas],
+        ['General note', state.notes.general]
+      ].map(([label, value]) => `
+        <div class="preview-note-card">
+          <div class="preview-label">${escapeHtml(label)}</div>
+          <p>${escapeHtml(value || 'No note added yet.')}</p>
+        </div>
+      `).join('');
+
+      els.reportPreview.innerHTML = `
+        <div class="report-preview-head">
+          <h3 class="report-preview-title">Final handover report preview</h3>
+          <p class="report-preview-sub">Review the finished document structure before exporting to PDF.</p>
+        </div>
+        <div class="report-preview-body">
+          <div class="preview-meta-grid">
+            <div class="preview-meta-card">
+              <div class="preview-label">Header</div>
+              <div class="preview-value">Facility Handover Report</div>
+            </div>
+            <div class="preview-meta-card">
+              <div class="preview-label">Date and day</div>
+              <div class="preview-value">${escapeHtml(state.date || 'Not set')} · ${escapeHtml(state.day || 'Not set')}</div>
+            </div>
+            <div class="preview-meta-card">
+              <div class="preview-label">Declared by</div>
+              <div class="preview-value">${escapeHtml(state.declaredBy || 'Not entered')}</div>
+            </div>
+            <div class="preview-meta-card">
+              <div class="preview-label">Staff on duty</div>
+              <div class="preview-value">${escapeHtml(state.staffOnDuty || 'Not selected')}</div>
+            </div>
+          </div>
+
+          <div class="preview-stats-grid">
+            <div class="preview-stat"><div class="preview-label">Completion</div><div class="preview-stat-value">${stats.percent}%</div></div>
+            <div class="preview-stat"><div class="preview-label">OK</div><div class="preview-stat-value">${stats.ok}</div></div>
+            <div class="preview-stat"><div class="preview-label">Issues</div><div class="preview-stat-value">${stats.issue}</div></div>
+            <div class="preview-stat"><div class="preview-label">Skipped</div><div class="preview-stat-value">${stats.skip}</div></div>
+          </div>
+
+          <div class="preview-meta-grid">${noteCards}</div>
+
+          <div class="preview-sign-grid">
+            <div class="preview-sign-card">
+              <div class="preview-label">BHA Signature</div>
+              ${state.signatures.bha ? `<img class="preview-sign-image" src="${state.signatures.bha}" alt="BHA signature preview">` : '<div class="preview-empty">No BHA signature captured.</div>'}
+            </div>
+            <div class="preview-sign-card">
+              <div class="preview-label">CFC Signature</div>
+              ${state.signatures.cfci ? `<img class="preview-sign-image" src="${state.signatures.cfci}" alt="CFC signature preview">` : '<div class="preview-empty">No CFC signature captured.</div>'}
+            </div>
+          </div>
+
+          <div>
+            <div class="preview-label" style="margin-bottom:10px;">Issue photos</div>
+            <div class="preview-photo-grid">
+              ${photos.length ? photos.map(item => `
+                <div class="preview-photo-card">
+                  <img src="${item.photo}" alt="Issue photo for ${escapeHtml(item.area)}">
+                  <div class="preview-label">${escapeHtml(item.area)}</div>
+                  <div class="preview-value">${escapeHtml(item.note || 'No note added yet.')}</div>
+                </div>`).join('') : '<div class="preview-empty">No issue photos attached yet.</div>'}
+            </div>
+          </div>
+        </div>`;
     }
 
 function renderPrintSheet() {
@@ -2764,20 +2972,38 @@ function bindPrint() {
       let ticking = false;
       let lastY = window.scrollY || 0;
       let hidden = false;
+      let accumulatedDown = 0;
+      let accumulatedUp = 0;
 
       function updateShell() {
+        if (currentIndex !== 0) {
+          shell.classList.add('setup-only-hidden');
+          shell.classList.remove('top-hidden');
+          lastY = window.scrollY || 0;
+          ticking = false;
+          return;
+        }
+
+        shell.classList.remove('setup-only-hidden');
         const currentY = window.scrollY || 0;
         const delta = currentY - lastY;
         const atTop = currentY <= 8;
-        const scrollingDown = delta > 4;
-        const scrollingUp = delta < -4;
 
         if (atTop) {
           hidden = false;
-        } else if (scrollingDown && currentY > 36) {
-          hidden = true;
-        } else if (scrollingUp) {
-          hidden = false;
+          accumulatedDown = 0;
+          accumulatedUp = 0;
+        } else {
+          if (delta > 0) {
+            accumulatedDown += delta;
+            accumulatedUp = 0;
+          } else if (delta < 0) {
+            accumulatedUp += Math.abs(delta);
+            accumulatedDown = 0;
+          }
+
+          if (!hidden && currentY > 72 && accumulatedDown > 34) hidden = true;
+          if (hidden && accumulatedUp > 24) hidden = false;
         }
 
         shell.classList.toggle('top-hidden', hidden);
