@@ -24,8 +24,8 @@
       --ok-soft: rgba(16,185,129,0.14);
       --issue: #b91c1c;
       --issue-soft: rgba(239,68,68,0.12);
-      --skip: #a16207;
-      --skip-soft: rgba(245,158,11,0.14);
+      --pending: #a16207;
+      --pending-soft: rgba(245,158,11,0.14);
       --pending: #475569;
       --pending-soft: rgba(100,116,139,0.1);
       --shadow-lg: 0 30px 80px rgba(2, 8, 23, 0.25);
@@ -188,7 +188,7 @@
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
       margin-top: 16px;
     }
@@ -490,7 +490,6 @@
     }
     .room-card.ok::after { background: linear-gradient(180deg, #34d399, #059669); }
     .room-card.issue::after { background: linear-gradient(180deg, #f87171, #dc2626); }
-    .room-card.skip::after { background: linear-gradient(180deg, #fbbf24, #d97706); }
 
     .room-top {
       display: flex;
@@ -531,11 +530,10 @@
     }
     .room-status-badge.ok { background: var(--ok-soft); color: var(--ok); border-color: rgba(16,185,129,0.2); }
     .room-status-badge.issue { background: var(--issue-soft); color: var(--issue); border-color: rgba(239,68,68,0.2); }
-    .room-status-badge.skip { background: var(--skip-soft); color: var(--skip); border-color: rgba(245,158,11,0.24); }
 
     .status-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
     }
     .btn-status {
@@ -556,11 +554,6 @@
       background: linear-gradient(180deg, #fef2f2, #fee2e2);
       color: var(--issue);
       border-color: rgba(239,68,68,0.28);
-    }
-    .btn-status.skip.active {
-      background: linear-gradient(180deg, #fffbeb, #fef3c7);
-      color: var(--skip);
-      border-color: rgba(245,158,11,0.32);
     }
 
     .issue-box {
@@ -1164,7 +1157,7 @@
       margin: 0;
     }
     @media (min-width: 720px) {
-      .declaration-grid { grid-template-columns: repeat(3, 1fr); }
+      .declaration-grid { grid-template-columns: repeat(2, 1fr); }
     }
     .preview-meta-grid, .preview-sign-grid, .preview-photo-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
     .preview-meta-card, .preview-sign-card, .preview-note-card, .preview-photo-card {
@@ -1370,7 +1363,7 @@
       .app { padding-left: 18px; padding-right: 18px; }
       .hero { padding: 22px; }
       .grid-2 { grid-template-columns: repeat(2, 1fr); }
-      .grid-3 { grid-template-columns: repeat(3, 1fr); }
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
       .quick-actions { grid-template-columns: repeat(4, 1fr); }
       .stats-grid, .note-grid, .actions-grid { grid-template-columns: repeat(2, 1fr); }
       .toolbar-inner { grid-template-columns: repeat(4, 1fr); }
@@ -1471,6 +1464,48 @@
       padding-top: 0 !important;
     }
 
+
+  .status-row.two-col { grid-template-columns: repeat(2, 1fr); }
+
+  .btn-status {
+    min-height: 56px;
+    padding: 10px 12px;
+    justify-content: center;
+    align-items: center;
+  }
+  .btn-status .status-icon {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:28px;
+    height:28px;
+    border-radius:999px;
+    margin-right:0;
+    font-size:18px;
+    font-weight:900;
+    line-height:1;
+    transition: transform .14s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+  }
+
+  .signature-meta-note {
+    font-size: 12px;
+    color: var(--text-soft);
+    line-height: 1.45;
+  }
+
+  .canvas-wrap {
+    min-height: 220px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(238,244,255,0.98));
+  }
+  canvas.signature {
+    width: 100%;
+    height: 210px;
+    display: block;
+    background: transparent;
+    touch-action: none;
+    cursor: crosshair;
+  }
+
 </style>
 
   <style id="v18-premium-warm-theme-overrides">
@@ -1492,8 +1527,8 @@
       --ok-soft: rgba(34,197,94,0.14);
       --issue: #ef4444;
       --issue-soft: rgba(239,68,68,0.14);
-      --skip: #f59e0b;
-      --skip-soft: rgba(245,158,11,0.14);
+      --pending: #f59e0b;
+      --pending-soft: rgba(245,158,11,0.14);
       --pending: #a8a29e;
       --pending-soft: rgba(168,162,158,0.14);
       --shadow-lg: 0 28px 80px rgba(0,0,0,.48), 0 10px 28px rgba(109, 30, 14, 0.18);
@@ -1687,7 +1722,6 @@
     }
     .room-status-badge.ok { background: rgba(34,197,94,.14); color: #b6f0c7; }
     .room-status-badge.issue { background: rgba(239,68,68,.14); color: #fecaca; }
-    .room-status-badge.skip { background: rgba(245,158,11,.16); color: #fde2a7; }
     .btn-status.ok.active {
       background: linear-gradient(180deg, rgba(22,163,74,.58), rgba(20,83,45,.52));
       color: #ecfdf5;
@@ -1702,14 +1736,6 @@
       border-color: rgba(252,165,165,.48);
       box-shadow: 0 10px 22px rgba(220,38,38,.22), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -8px 18px rgba(0,0,0,.16);
       filter: saturate(1.06);
-      transform: translateY(-1px);
-    }
-    .btn-status.skip.active {
-      background: linear-gradient(180deg, rgba(245,158,11,.62), rgba(180,83,9,.5));
-      color: #fff7ed;
-      border-color: rgba(253,186,116,.52);
-      box-shadow: 0 10px 22px rgba(245,158,11,.24), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -8px 18px rgba(0,0,0,.14);
-      filter: saturate(1.08);
       transform: translateY(-1px);
     }
     .btn-status:not(.active):hover,
@@ -1746,7 +1772,7 @@
     }
     .summary-tile.ok { box-shadow: var(--shadow-sm), inset 0 0 0 1px rgba(34,197,94,.12); }
     .summary-tile.issue { box-shadow: var(--shadow-sm), inset 0 0 0 1px rgba(239,68,68,.14); }
-    .summary-tile.skip { box-shadow: var(--shadow-sm), inset 0 0 0 1px rgba(245,158,11,.14); }
+    .summary-tile.pending { box-shadow: var(--shadow-sm), inset 0 0 0 1px rgba(245,158,11,.14); }
 
     .export-callout {
       background: linear-gradient(180deg, rgba(60, 20, 12, 0.58), rgba(33, 18, 14, 0.54));
@@ -1900,7 +1926,7 @@
             <div id="heroIssue" class="hero-stat-value">0</div>
           </div>
           <div class="hero-stat">
-            <div class="hero-stat-label">Skipped</div>
+            <div class="hero-stat-label">Pending</div>
             <div id="heroSkip" class="hero-stat-value">0</div>
           </div>
         </div>
@@ -2101,7 +2127,7 @@ Subject to "His Lambs" only: Kitchen-cleanliness, lights, fridge, cupboards, dus
         <div class="stats-grid">
           <div class="summary-tile"><div class="summary-tile-label">Areas marked OK</div><div id="statOk" class="summary-tile-value">0</div></div>
           <div class="summary-tile"><div class="summary-tile-label">Issues flagged</div><div id="statIssue" class="summary-tile-value">0</div></div>
-          <div class="summary-tile"><div class="summary-tile-label">Items skipped</div><div id="statSkip" class="summary-tile-value">0</div></div>
+          <div class="summary-tile"><div class="summary-tile-label">Items pendingped</div><div id="statSkip" class="summary-tile-value">0</div></div>
           <div class="summary-tile"><div class="summary-tile-label">Completion</div><div id="statCompletion" class="summary-tile-value">0%</div></div>
         </div>
 
@@ -2451,10 +2477,9 @@ Subject to "His Lambs" only: Kitchen-cleanliness, lights, fridge, cupboards, dus
             </div>
             <div class="room-status-badge ${escapeHtml(badgeClass)}">${escapeHtml(badgeText)}</div>
           </div>
-          <div class="status-row">
-            <button class="btn-status ok ${item.status === 'ok' ? 'active' : ''}" type="button" data-status="ok">OK</button>
-            <button class="btn-status issue ${item.status === 'issue' ? 'active' : ''}" type="button" data-status="issue">Issue</button>
-            <button class="btn-status skip ${item.status === 'skip' ? 'active' : ''}" type="button" data-status="skip">Skip</button>
+          <div class="status-row two-col">
+            <button class="btn-status ok ${item.status === 'ok' ? 'active' : ''}" type="button" data-status="ok" aria-label="Mark venue OK" title="Mark venue OK"><span class="status-icon">✓</span></button>
+            <button class="btn-status issue ${item.status === 'issue' ? 'active' : ''}" type="button" data-status="issue" aria-label="Mark venue issue" title="Mark venue issue"><span class="status-icon">✕</span></button>
           </div>
           <div class="issue-box ${issueOpen ? 'show' : ''}" data-issue-box>
             <label class="label">Issue note</label>
@@ -2576,7 +2601,7 @@ function renderAreaList() {
       const items = Object.values(state.checks);
       let ok = 0;
       let issue = 0;
-      let skip = 0;
+      let pending = 0;
       let checkedComplete = 0;
 
       items.forEach(item => {
@@ -2588,7 +2613,7 @@ function renderAreaList() {
           issue++;
           checkedComplete++;
         }
-        if (item.status === 'skip') skip++;
+        if (false) pending++;
       });
 
       const setupFields = [
@@ -2609,7 +2634,7 @@ function renderAreaList() {
       const percent = Math.round((done / total) * 100);
       const isComplete = setupDone === setupFields.length && signaturesDone === signatureFields.length && checkedComplete === items.length;
 
-      return { done, total, ok, issue, skip, percent: isComplete ? 100 : percent, isComplete };
+      return { done, total, ok, issue, pending, percent: isComplete ? 100 : percent, isComplete };
     }
 
     function refreshDashboard() {
@@ -2620,10 +2645,10 @@ function renderAreaList() {
       els.completionBadge.className = 'badge ' + (stats.isComplete ? 'complete' : 'incomplete');
       els.heroOk.textContent = stats.ok;
       els.heroIssue.textContent = stats.issue;
-      els.heroSkip.textContent = stats.skip;
+      els.heroSkip.textContent = stats.pending;
       els.statOk.textContent = stats.ok;
       els.statIssue.textContent = stats.issue;
-      els.statSkip.textContent = stats.skip;
+      els.statSkip.textContent = stats.pending;
       els.statCompletion.textContent = stats.percent + '%';
 
       const issues = getIssueItems();
@@ -2880,7 +2905,7 @@ function renderReportPreview() {
             <div class="preview-stat"><div class="preview-label">Completion</div><div class="preview-stat-value">${stats.percent}%</div></div>
             <div class="preview-stat"><div class="preview-label">OK</div><div class="preview-stat-value">${stats.ok}</div></div>
             <div class="preview-stat"><div class="preview-label">Issues</div><div class="preview-stat-value">${stats.issue}</div></div>
-            <div class="preview-stat"><div class="preview-label">Skipped</div><div class="preview-stat-value">${stats.skip}</div></div>
+            <div class="preview-stat"><div class="preview-label">Pending</div><div class="preview-stat-value">${stats.pending}</div></div>
           </div>
 
           <div class="preview-meta-grid">${noteCards}</div>
@@ -2975,7 +3000,7 @@ function renderPrintSheet() {
           <div class="print-stat"><div class="print-stat-label">Completion</div><div class="print-stat-value">${stats.percent}%</div></div>
           <div class="print-stat"><div class="print-stat-label">OK</div><div class="print-stat-value">${stats.ok}</div></div>
           <div class="print-stat"><div class="print-stat-label">Issues</div><div class="print-stat-value">${stats.issue}</div></div>
-          <div class="print-stat"><div class="print-stat-label">Skipped</div><div class="print-stat-value">${stats.skip}</div></div>
+          <div class="print-stat"><div class="print-stat-label">Pending</div><div class="print-stat-value">${stats.pending}</div></div>
         </div>
 
         <div class="print-declaration">${declarationText}</div>
@@ -3172,7 +3197,7 @@ function renderPrintSheet() {
       doc.addWrapped(`Staff on duty: ${state.staffOnDuty || 'Not selected'}`, 11, 'F1', 40, 95);
       doc.addRule();
       doc.addLine('Key Stats', 14, 'F2', 40);
-      doc.addWrapped(`Completion: ${stats.percent}%    OK: ${stats.ok}    Issues: ${stats.issue}    Skipped: ${stats.skip}`, 11, 'F1', 40, 95);
+      doc.addWrapped(`Completion: ${stats.percent}%    OK: ${stats.ok}    Issues: ${stats.issue}    Pending: ${stats.pending}`, 11, 'F1', 40, 95);
       doc.addGap(4);
       doc.addLine('Declaration', 14, 'F2', 40);
       doc.addWrapped(declarationText, 11, 'F1', 40, 92);
@@ -3580,6 +3605,199 @@ function bindPrint() {
       }
     }
 
+    
+    const signaturePads = {};
+
+    function getSignatureStrokeColor(kind) {
+      return kind === 'bha' ? '#2563eb' : '#111111';
+    }
+
+    function ensureSignatureMeta() {
+      if (!state.signatureMeta) {
+        state.signatureMeta = {
+          bha: { signedAt: '', gpsStatus: '', latitude: '', longitude: '', accuracy: '' },
+          cfci: { signedAt: '', gpsStatus: '', latitude: '', longitude: '', accuracy: '' }
+        };
+      }
+    }
+
+    function getCanvasCtx(canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 3.2;
+      return ctx;
+    }
+
+    function fitCanvasToDisplay(canvas) {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rect.width * ratio));
+      const height = Math.max(1, Math.round(rect.height * ratio));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      const ctx = getCanvasCtx(canvas);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return { ratio, rect, ctx };
+    }
+
+    function drawStoredSignature(kind) {
+      const pad = signaturePads[kind];
+      if (!pad) return;
+      const { canvas, points } = pad;
+      const { ctx } = fitCanvasToDisplay(canvas);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = getSignatureStrokeColor(kind);
+
+      if (!points.length) {
+        canvas.parentElement.classList.remove('has-ink');
+        return;
+      }
+
+      canvas.parentElement.classList.add('has-ink');
+
+      for (const stroke of points) {
+        if (!stroke.length) continue;
+        ctx.beginPath();
+        const first = stroke[0];
+        ctx.moveTo(first.x, first.y);
+        if (stroke.length === 1) {
+          ctx.lineTo(first.x + 0.01, first.y + 0.01);
+        } else {
+          for (let i = 1; i < stroke.length; i++) {
+            ctx.lineTo(stroke[i].x, stroke[i].y);
+          }
+        }
+        ctx.stroke();
+      }
+    }
+
+    function snapshotSignature(kind) {
+      const pad = signaturePads[kind];
+      if (!pad) return;
+      const hasInk = pad.points.some(stroke => stroke.length);
+      state.signatures[kind] = hasInk ? pad.canvas.toDataURL('image/png') : '';
+      if (!hasInk) return;
+      ensureSignatureMeta();
+      state.signatureMeta[kind].signedAt = new Date().toISOString();
+      captureGpsMeta().then(meta => {
+        state.signatureMeta[kind].gpsStatus = meta.gpsStatus;
+        state.signatureMeta[kind].latitude = meta.latitude;
+        state.signatureMeta[kind].longitude = meta.longitude;
+        state.signatureMeta[kind].accuracy = meta.accuracy;
+        saveState();
+        refreshDashboard();
+        renderSummary && renderSummary();
+      });
+    }
+
+    function makePointerPoint(event, canvas) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+
+    function setupSignaturePad(kind, canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+
+      signaturePads[kind] = {
+        canvas,
+        drawing: false,
+        points: []
+      };
+
+      const wrap = canvas.parentElement;
+
+      const start = (event) => {
+        event.preventDefault();
+        fitCanvasToDisplay(canvas);
+        const pad = signaturePads[kind];
+        pad.drawing = true;
+        wrap.classList.add('signing');
+        const point = makePointerPoint(event, canvas);
+        pad.points.push([point]);
+        drawStoredSignature(kind);
+        try { canvas.setPointerCapture(event.pointerId); } catch {}
+      };
+
+      const move = (event) => {
+        const pad = signaturePads[kind];
+        if (!pad || !pad.drawing) return;
+        event.preventDefault();
+        const point = makePointerPoint(event, canvas);
+        const currentStroke = pad.points[pad.points.length - 1];
+        currentStroke.push(point);
+        drawStoredSignature(kind);
+      };
+
+      const end = async (event) => {
+        const pad = signaturePads[kind];
+        if (!pad || !pad.drawing) return;
+        event.preventDefault();
+        pad.drawing = false;
+        wrap.classList.remove('signing');
+        try { canvas.releasePointerCapture(event.pointerId); } catch {}
+        drawStoredSignature(kind);
+        snapshotSignature(kind);
+      };
+
+      canvas.addEventListener('pointerdown', start);
+      canvas.addEventListener('pointermove', move);
+      canvas.addEventListener('pointerup', end);
+      canvas.addEventListener('pointercancel', end);
+      canvas.addEventListener('pointerleave', end);
+
+      window.addEventListener('resize', () => drawStoredSignature(kind));
+
+      // load existing image if available by treating as drawn state
+      if (state.signatures && state.signatures[kind]) {
+        const img = new Image();
+        img.onload = () => {
+          fitCanvasToDisplay(canvas);
+          const ctx = getCanvasCtx(canvas);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.clientWidth, canvas.clientHeight);
+          wrap.classList.add('has-ink');
+        };
+        img.src = state.signatures[kind];
+      } else {
+        drawStoredSignature(kind);
+      }
+    }
+
+    function clearSignaturePad(kind) {
+      const pad = signaturePads[kind];
+      if (!pad) return;
+      pad.points = [];
+      drawStoredSignature(kind);
+      state.signatures[kind] = '';
+      ensureSignatureMeta();
+      state.signatureMeta[kind] = { signedAt: '', gpsStatus: '', latitude: '', longitude: '', accuracy: '' };
+      saveState();
+      refreshDashboard();
+      if (typeof renderSummary === 'function') renderSummary();
+    }
+
+    function initSignaturePads() {
+      setupSignaturePad('bha', 'sigBha');
+      setupSignaturePad('cfci', 'sigCfci');
+    }
+
+
+
+    document.querySelectorAll('[data-clear-sign]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const kind = btn.getAttribute('data-clear-sign');
+        clearSignaturePad(kind);
+      });
+    });
+
+    initSignaturePads();
     init();
     syncDeclarationStaffName();
   </script>
@@ -3670,7 +3888,7 @@ function bindPrint() {
     state.signatureMeta.cfci = normalizeSignMeta(state.signatureMeta.cfci);
     Object.keys(state.checks || {}).forEach(k => {
       state.checks[k] = normalizeCheck(state.checks[k]);
-      if(state.checks[k].status === 'skip') state.checks[k].status = '';
+      if(state.checks[k].status === 'pending') state.checks[k].status = '';
     });
   }
   function rebindFieldEls(){
@@ -3798,7 +4016,7 @@ function bindPrint() {
   };
   calcStats = function(){
     const items = Object.values(state.checks || {});
-    let ok=0, issue=0, skip=0; let doneItems=0;
+    let ok=0, issue=0, pending=0; let doneItems=0;
     items.forEach(item => { if(item.status==='ok'){ ok++; doneItems++; } else if(item.status==='issue'){ issue++; doneItems++; } });
     const requiredSetup = [state.date, state.day, (state.declaredBy||'').trim(), (state.staffOnDuty||'').trim(), (state.representative||'').trim()];
     const setupDone = requiredSetup.filter(Boolean).length;
@@ -3806,7 +4024,7 @@ function bindPrint() {
     const done = setupDone + doneItems + signaturesDone;
     const total = requiredSetup.length + items.length + 2;
     const percent = Math.round((done / Math.max(total,1)) * 100);
-    return { done, total, ok, issue, skip, percent };
+    return { done, total, ok, issue, pending, percent };
   };
   function validationErrors(){
     const errs=[];
