@@ -1035,6 +1035,42 @@
       color: #0f172a;
     }
 
+    .print-declaration-full {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      background: #f8fafc;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .print-declaration-full p {
+      margin: 0 0 10px;
+    }
+    .print-declaration-sections {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .print-declaration-panel {
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+    .print-declaration-panel-head {
+      padding: 7px 10px;
+      background: #f1f5f9;
+      border-bottom: 1px solid #cbd5e1;
+      font-weight: 800;
+      text-align: center;
+    }
+    .print-declaration-panel-copy {
+      padding: 10px;
+      white-space: pre-wrap;
+    }
+
     .section {
       opacity: 0;
       transform: translateY(10px) scale(.995);
@@ -1157,7 +1193,7 @@
       margin: 0;
     }
     @media (min-width: 720px) {
-      .declaration-grid { grid-template-columns: repeat(2, 1fr); }
+      .declaration-grid { grid-template-columns: 1fr; }
     }
     .preview-meta-grid, .preview-sign-grid, .preview-photo-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
     .preview-meta-card, .preview-sign-card, .preview-note-card, .preview-photo-card {
@@ -2019,7 +2055,7 @@
         <div id="areasDeclarationCard" class="declaration-card">
           <div class="declaration-body">
             <p class="declaration-lead">I <span id="areasDeclarationName" class="declaration-name">________________</span> hereby agree that the following was checked in each of the aforementioned venues, any and all concerns will be noted.</p>
-            <p class="declaration-hint">This declaration is populated from the Staff on duty field on the Setup page and is shown here before the venue checks begin.</p>
+            <p class="declaration-hint">This declaration is populated from the Staff on duty field on the Setup page and is shown here in full before the venue checks begin.</p>
             <div class="declaration-grid">
               <div class="declaration-section">
                 <div class="declaration-section-head">Classroom Checks</div>
@@ -2910,6 +2946,25 @@ function renderReportPreview() {
 
           <div class="preview-meta-grid">${noteCards}</div>
 
+          <div class="preview-note-card">
+            <div class="preview-label">Declaration</div>
+            <p>I ${escapeHtml(state.staffOnDuty || '________________')} hereby agree that the following was checked in each of the aforementioned venues, any and all concerns will be noted.</p>
+          </div>
+          <div class="preview-note-card">
+            <div class="preview-label">Classroom Checks</div>
+            <p>Doors, door handles, door frames, glass doors, latches, windows, walls, plug points, LAN ports, chalk boards, tiles, wooden floors, play mats, lights, light switches, furniture, cupboards, T.V.'s, speakers, remotes.
+Subject to "His Lambs" only: Kitchen-cleanliness, lights, fridge, cupboards, dustbin, microwave, counters, basin, plumbing.</p>
+          </div>
+          <div class="preview-note-card">
+            <div class="preview-label">Restroom Checks</div>
+            <p>Cleanliness, urinals, toilet reservoirs, plumbing, doors, lights, tiles, taps, basins, mirrors, counters, dustbins, sanitary disposal bins (Girls only)</p>
+          </div>
+          <div class="preview-note-card">
+            <div class="preview-label">Playground Checks</div>
+            <p>Cleanliness, plastic components, bolts and screws, astro turf, landing strips, rubberized flooring, dustbins, drinking taps, gutters, tiles, corridor lights, corridor railings.</p>
+          </div>
+
+
           <div class="preview-sign-grid">
             <div class="preview-sign-card">
               <div class="preview-label">BHA Signature</div>
@@ -2967,7 +3022,14 @@ function renderPrintSheet() {
         `).join('')
         : '<div class="small">No issue photos attached.</div>';
 
-      const declarationText = `I ${escapeHtml(state.declaredBy || '________________')} declare that I completed the facility handover inspection, recorded the condition of each venue honestly, and attached notes and photos for every issue flagged.`;
+      const declarationIntro = `I ${state.staffOnDuty || '________________'} hereby agree that the following was checked in each of the aforementioned venues, any and all concerns will be noted.`;
+      const declarationClassroom = `Classroom Checks
+Doors, door handles, door frames, glass doors, latches, windows, walls, plug points, LAN ports, chalk boards, tiles, wooden floors, play mats, lights, light switches, furniture, cupboards, T.V.'s, speakers, remotes.
+Subject to "His Lambs" only: Kitchen-cleanliness, lights, fridge, cupboards, dustbin, microwave, counters, basin, plumbing.`;
+      const declarationRestroom = `Restroom Checks
+Cleanliness, urinals, toilet reservoirs, plumbing, doors, lights, tiles, taps, basins, mirrors, counters, dustbins, sanitary disposal bins (Girls only)`;
+      const declarationPlayground = `Playground Checks
+Cleanliness, plastic components, bolts and screws, astro turf, landing strips, rubberized flooring, dustbins, drinking taps, gutters, tiles, corridor lights, corridor railings.`;
 
       els.printSheet.innerHTML = `
         <div class="print-head">
@@ -3003,7 +3065,24 @@ function renderPrintSheet() {
           <div class="print-stat"><div class="print-stat-label">Pending</div><div class="print-stat-value">${stats.pending}</div></div>
         </div>
 
-        <div class="print-declaration">${declarationText}</div>
+        <div class="print-declaration-full">
+          <p>I ${escapeHtml(state.staffOnDuty || '________________')} hereby agree that the following was checked in each of the aforementioned venues, any and all concerns will be noted.</p>
+          <div class="print-declaration-sections">
+            <div class="print-declaration-panel">
+              <div class="print-declaration-panel-head">Classroom Checks</div>
+              <div class="print-declaration-panel-copy">Doors, door handles, door frames, glass doors, latches, windows, walls, plug points, LAN ports, chalk boards, tiles, wooden floors, play mats, lights, light switches, furniture, cupboards, T.V.'s, speakers, remotes.
+Subject to "His Lambs" only: Kitchen-cleanliness, lights, fridge, cupboards, dustbin, microwave, counters, basin, plumbing.</div>
+            </div>
+            <div class="print-declaration-panel">
+              <div class="print-declaration-panel-head">Restroom Checks</div>
+              <div class="print-declaration-panel-copy">Cleanliness, urinals, toilet reservoirs, plumbing, doors, lights, tiles, taps, basins, mirrors, counters, dustbins, sanitary disposal bins (Girls only)</div>
+            </div>
+            <div class="print-declaration-panel">
+              <div class="print-declaration-panel-head">Playground Checks</div>
+              <div class="print-declaration-panel-copy">Cleanliness, plastic components, bolts and screws, astro turf, landing strips, rubberized flooring, dustbins, drinking taps, gutters, tiles, corridor lights, corridor railings.</div>
+            </div>
+          </div>
+        </div>
 
         <div class="print-section">
           <h3>Representative Signatures</h3>
@@ -3170,7 +3249,14 @@ function renderPrintSheet() {
       const issuesOnly = !!state.settings.issuesOnlyExport;
       const listedItems = issuesOnly ? allItems.filter(item => item.status === 'issue') : allItems.filter(item => item.status);
       const issuePhotos = allItems.filter(item => item.status === 'issue' && item.photo);
-      const declarationText = `I ${state.declaredBy || '________________'} declare that I completed the facility handover inspection, recorded the condition of each venue honestly, and attached notes and photos for every issue flagged.`;
+      const declarationIntro = `I ${state.staffOnDuty || '________________'} hereby agree that the following was checked in each of the aforementioned venues, any and all concerns will be noted.`;
+      const declarationClassroom = `Classroom Checks
+Doors, door handles, door frames, glass doors, latches, windows, walls, plug points, LAN ports, chalk boards, tiles, wooden floors, play mats, lights, light switches, furniture, cupboards, T.V.'s, speakers, remotes.
+Subject to "His Lambs" only: Kitchen-cleanliness, lights, fridge, cupboards, dustbin, microwave, counters, basin, plumbing.`;
+      const declarationRestroom = `Restroom Checks
+Cleanliness, urinals, toilet reservoirs, plumbing, doors, lights, tiles, taps, basins, mirrors, counters, dustbins, sanitary disposal bins (Girls only)`;
+      const declarationPlayground = `Playground Checks
+Cleanliness, plastic components, bolts and screws, astro turf, landing strips, rubberized flooring, dustbins, drinking taps, gutters, tiles, corridor lights, corridor railings.`;
 
       const imageSources = [];
       if (PDF_LOGOS && PDF_LOGOS.bha) imageSources.push({ key: 'bhaLogo', dataUrl: PDF_LOGOS.bha });
@@ -3200,7 +3286,16 @@ function renderPrintSheet() {
       doc.addWrapped(`Completion: ${stats.percent}%    OK: ${stats.ok}    Issues: ${stats.issue}    Pending: ${stats.pending}`, 11, 'F1', 40, 95);
       doc.addGap(4);
       doc.addLine('Declaration', 14, 'F2', 40);
-      doc.addWrapped(declarationText, 11, 'F1', 40, 92);
+      doc.addWrapped(declarationIntro, 11, 'F1', 40, 92);
+      doc.addGap(3);
+      doc.addLine('Classroom Checks', 11, 'F2', 40);
+      doc.addWrapped(declarationClassroom.replace('Classroom Checks\n',''), 10.5, 'F1', 46, 90);
+      doc.addGap(3);
+      doc.addLine('Restroom Checks', 11, 'F2', 40);
+      doc.addWrapped(declarationRestroom.replace('Restroom Checks\n',''), 10.5, 'F1', 46, 90);
+      doc.addGap(3);
+      doc.addLine('Playground Checks', 11, 'F2', 40);
+      doc.addWrapped(declarationPlayground.replace('Playground Checks\n',''), 10.5, 'F1', 46, 90);
       doc.addGap(4);
       doc.addLine('Notes', 14, 'F2', 40);
       [['Venues', state.notes.venues], ['Restrooms', state.notes.restrooms], ['Play Areas', state.notes.playAreas], ['General', state.notes.general]].forEach(([label, value]) => {
@@ -4106,7 +4201,14 @@ function bindPrint() {
     const auditLines = [];
     Object.values(state.checks).forEach(item => (item.auditTrail||[]).forEach(a => auditLines.push(`${item.area}: ${a.message} at ${formatDt(a.at)}`)));
     Object.entries(state.signatureMeta||{}).forEach(([k,m]) => { if(m && m.signedAt) auditLines.push(`${k.toUpperCase()} signature captured at ${formatDt(m.signedAt)}`); });
-    const declarationText = `I ${escapeHtml(state.declaredBy || '________________')} declare that I completed the facility handover inspection, recorded the condition of each venue honestly, and attached notes and photos for every issue flagged.`;
+    const declarationIntro = `I ${state.staffOnDuty || '________________'} hereby agree that the following was checked in each of the aforementioned venues, any and all concerns will be noted.`;
+      const declarationClassroom = `Classroom Checks
+Doors, door handles, door frames, glass doors, latches, windows, walls, plug points, LAN ports, chalk boards, tiles, wooden floors, play mats, lights, light switches, furniture, cupboards, T.V.'s, speakers, remotes.
+Subject to "His Lambs" only: Kitchen-cleanliness, lights, fridge, cupboards, dustbin, microwave, counters, basin, plumbing.`;
+      const declarationRestroom = `Restroom Checks
+Cleanliness, urinals, toilet reservoirs, plumbing, doors, lights, tiles, taps, basins, mirrors, counters, dustbins, sanitary disposal bins (Girls only)`;
+      const declarationPlayground = `Playground Checks
+Cleanliness, plastic components, bolts and screws, astro turf, landing strips, rubberized flooring, dustbins, drinking taps, gutters, tiles, corridor lights, corridor railings.`;
     els.printSheet.innerHTML = `
       <div class="print-head">
         <div class="print-logo-box left"><div class="print-logo-frame"><img src="${PDF_LOGOS.bha}" alt="BenHale Academy logo"></div><div class="print-logo-label">BenHale Academy</div></div>
