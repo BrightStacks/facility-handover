@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "facility-handover-cfc-bha",
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

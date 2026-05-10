@@ -2116,6 +2116,7 @@
 
   <script>
     const STORAGE_KEY = 'facility-handover-mobile-v5';
+    const REPORT_VERSION = '1.1-firestore-metadata';
     const steps = [
       { key: 'setup', title: 'Setup', sub: 'Basics' },
       { key: 'areas', title: 'Areas', sub: 'Rooms' },
@@ -2547,6 +2548,108 @@ function renderAreaList() {
       const isComplete = setupDone === setupFields.length && signaturesDone === signatureFields.length && checkedComplete === items.length;
 
       return { done, total, ok, issue, skip, percent: isComplete ? 100 : percent, isComplete };
+    }
+
+    function makeReportId() {
+      const datePart = (state.date || getTodayParts().date).replace(/[^0-9]/g, '');
+      const stamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
+      const random = Math.random().toString(36).slice(2, 8).toUpperCase();
+      return `FH-${datePart}-${stamp}-${random}`;
+    }
+
+    async function hashText(value) {
+      const input = typeof value === 'string' ? value : JSON.stringify(value);
+      if (window.crypto && crypto.subtle && window.TextEncoder) {
+        const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+        return Array.from(new Uint8Array(buffer)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+      }
+
+      let hash = 0;
+      for (let i = 0; i < input.length; i++) hash = ((hash << 5) - hash) + input.charCodeAt(i) | 0;
+      return String(hash >>> 0);
+    }
+
+    async function buildReportMetadata(exportAction, extra = {}) {
+      const reportId = makeReportId();
+      const clientGeneratedAt = new Date().toISOString();
+      const stats = calcStats();
+      const allItems = Object.values(state.checks);
+      const issueItems = allItems.filter(item => item.status === 'issue');
+      const photoItems = issueItems.filter(item => item.photo);
+      const hashPayload = {
+        reportId,
+        reportVersion: REPORT_VERSION,
+        clientGeneratedAt,
+        date: state.date,
+        day: state.day,
+        declaredBy: state.declaredBy,
+        staffOnDuty: state.staffOnDuty,
+        notes: state.notes,
+        checks: state.checks,
+        signatures: state.signatures,
+        settings: state.settings
+      };
+      const dataHash = await hashText(hashPayload);
+
+      return {
+        reportId,
+        reportVersion: REPORT_VERSION,
+        clientGeneratedAt,
+        exportAction,
+        reportDate: state.date || '',
+        handoverDay: state.day || '',
+        declaredBy: state.declaredBy || '',
+        staffOnDuty: state.staffOnDuty || '',
+        totalItems: allItems.length,
+        completedItems: allItems.filter(item => item.status === 'ok' || item.status === 'issue').length,
+        okCount: stats.ok,
+        issueCount: stats.issue,
+        skippedCount: stats.skip,
+        completionPercent: stats.percent,
+        isComplete: stats.isComplete,
+        issuesOnlyExport: !!state.settings.issuesOnlyExport,
+        issuePhotoCount: photoItems.length,
+        hasBhaSignature: !!state.signatures.bha,
+        hasCfcSignature: !!state.signatures.cfci,
+        dataHash,
+        lockStatus: 'Metadata saved to Firestore before PDF release',
+        pdfUploaded: false,
+        storagePath: '',
+        ...extra
+      };
+    }
+
+    async function saveReportMetadataBeforeExport(exportAction, extra = {}) {
+      const stats = calcStats();
+      if (!stats.isComplete) {
+        showToast('Complete the handover before export');
+        return null;
+      }
+
+      if (!window.FH_RECORDS || typeof window.FH_RECORDS.saveReportMetadata !== 'function') {
+        showToast('Backend record service is not ready');
+        return null;
+      }
+
+      try {
+        const metadata = await buildReportMetadata(exportAction, extra);
+        const saved = await window.FH_RECORDS.saveReportMetadata(metadata);
+        state.reportMeta = {
+          reportId: metadata.reportId,
+          version: metadata.reportVersion,
+          generatedAt: metadata.clientGeneratedAt,
+          dataHash: metadata.dataHash,
+          lockStatus: metadata.lockStatus,
+          firestorePath: saved.path
+        };
+        saveState(false);
+        showToast('Report metadata saved');
+        return metadata;
+      } catch (error) {
+        console.error(error);
+        showToast('Export blocked: metadata was not saved');
+        return null;
+      }
     }
 
     function refreshDashboard() {
@@ -3253,6 +3356,8 @@ function renderPrintSheet() {
           els.sharePdfBtn.textContent = 'Preparing PDF...';
         }
         const blob = await buildShareablePdfBlob();
+        const saved = await saveReportMetadataBeforeExport('SHARE_PDF', { pdfSizeBytes: blob.size });
+        if (!saved) return;
         const filename = `facility_handover_${state.date || 'undated'}.pdf`;
         const file = new File([blob], filename, { type: 'application/pdf' });
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -3282,7 +3387,9 @@ function renderPrintSheet() {
     }
 
 function bindPrint() {
-      els.exportPdfBtn.addEventListener('click', () => {
+      els.exportPdfBtn.addEventListener('click', async () => {
+        const saved = await saveReportMetadataBeforeExport('PRINT_PDF');
+        if (!saved) return;
         renderPrintSheet();
         setTimeout(() => window.print(), 100);
       });
@@ -3524,6 +3631,7 @@ function bindPrint() {
     getFirestore,
     doc,
     getDoc,
+    setDoc,
     collection,
     addDoc,
     serverTimestamp
@@ -3548,6 +3656,10 @@ function bindPrint() {
     isAdmin: false,
     db,
     auth
+  };
+
+  window.FH_RECORDS = {
+    saveReportMetadata: null
   };
 
   const authScreen = document.createElement("div");
@@ -3628,6 +3740,42 @@ function bindPrint() {
       console.warn("Audit log failed:", error.message);
     }
   }
+
+  async function saveReportMetadata(metadata) {
+    if (!window.FH_AUTH.user || !window.FH_AUTH.profile) {
+      throw new Error("You must be signed in before exporting a report.");
+    }
+
+    const reportId = metadata.reportId;
+    if (!reportId) throw new Error("Missing report ID.");
+
+    const reportRef = doc(db, "reports", reportId);
+    const record = {
+      ...metadata,
+      uid: window.FH_AUTH.user.uid,
+      userId: window.FH_AUTH.user.uid,
+      userEmail: window.FH_AUTH.user.email || "",
+      userDisplayName: window.FH_AUTH.profile.displayName || "",
+      userRole: window.FH_AUTH.profile.role || "",
+      status: "metadata_saved",
+      source: "browser_export",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    await setDoc(reportRef, record);
+    await writeAudit("PDF_EXPORTED", {
+      reportId,
+      reportDate: metadata.reportDate || "",
+      exportAction: metadata.exportAction || "",
+      dataHash: metadata.dataHash || "",
+      pdfUploaded: false
+    });
+
+    return { id: reportId, path: `reports/${reportId}` };
+  }
+
+  window.FH_RECORDS.saveReportMetadata = saveReportMetadata;
 
   async function loadUserProfile(user) {
     const userRef = doc(db, "users", user.uid);
