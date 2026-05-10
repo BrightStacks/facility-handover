@@ -1,0 +1,77 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function approvedActiveUser() {
+      return signedIn()
+        && userDoc().data.active == true
+        && (userDoc().data.role == 'user' || userDoc().data.role == 'admin');
+    }
+
+    function adminUser() {
+      return approvedActiveUser() && userDoc().data.role == 'admin';
+    }
+
+    function pendingPdfArchiveFields() {
+      return request.resource.data.pdfUploaded == false
+        && request.resource.data.storageDownloadAvailable == false;
+    }
+
+    function storedPdfArchiveFields(reportId) {
+      return request.resource.data.pdfUploaded == true
+        && request.resource.data.pdfStoragePath == 'reports/' + reportId + '/' + reportId + '.pdf'
+        && request.resource.data.pdfFileName == reportId + '.pdf'
+        && request.resource.data.storageDownloadAvailable == true;
+    }
+
+    function sameReportIdentity(reportId) {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.reportId == reportId;
+    }
+
+    function ownerStoresOwnPendingReport(reportId) {
+      return (
+        approvedActiveUser()
+        && resource.data.userId == request.auth.uid
+        && resource.data.pdfUploaded == false
+        && sameReportIdentity(reportId)
+        && storedPdfArchiveFields(reportId)
+      );
+    }
+
+    match /users/{userId} {
+      allow read: if approvedActiveUser() && (request.auth.uid == userId || adminUser());
+      allow create, update, delete: if adminUser();
+    }
+
+    match /reports/{reportId} {
+      allow create: if approvedActiveUser()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.reportId == reportId
+        && pendingPdfArchiveFields();
+
+      allow read: if approvedActiveUser()
+        && (resource.data.userId == request.auth.uid || adminUser());
+
+      allow update: if adminUser() || ownerStoresOwnPendingReport(reportId);
+      allow delete: if false;
+    }
+
+    match /auditLogs/{auditId} {
+      allow create: if approvedActiveUser()
+        && request.resource.data.uid == request.auth.uid;
+
+      allow read: if adminUser();
+      allow update, delete: if false;
+    }
+  }
+}

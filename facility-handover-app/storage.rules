@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+
+    function approvedActiveUser() {
+      return signedIn()
+        && userDoc().data.active == true
+        && (userDoc().data.role == 'user' || userDoc().data.role == 'admin');
+    }
+
+    function adminUser() {
+      return approvedActiveUser() && userDoc().data.role == 'admin';
+    }
+
+    function reportDoc(reportId) {
+      return firestore.get(/databases/(default)/documents/reports/$(reportId));
+    }
+
+    function reportOwner(reportId) {
+      return reportDoc(reportId).data.userId == request.auth.uid;
+    }
+
+    match /reports/{reportId}/{reportFile} {
+      allow create: if approvedActiveUser()
+        && reportFile == reportId + '.pdf'
+        && request.resource.size < 20 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+
+      allow read: if approvedActiveUser()
+        && (adminUser() || reportOwner(reportId));
+
+      allow update: if false;
+      allow delete: if adminUser();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
